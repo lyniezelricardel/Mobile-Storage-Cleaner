@@ -71,22 +71,82 @@ class DuplicateDetector {
     return distance;
   }
 
+  /// Returns the Hamming distance when it is within [threshold], else null.
+  ///
+  /// Stops comparing as soon as the threshold is exceeded, which keeps large
+  /// galleries fast because most unrelated pairs differ in the first few bits.
+  static int? distanceWithin(
+    String hash1,
+    String hash2, {
+    int threshold = similarityThreshold,
+  }) {
+    if (hash1.length != hash2.length) return null;
+    int distance = 0;
+    for (int i = 0; i < hash1.length; i++) {
+      if (hash1[i] != hash2[i]) {
+        distance++;
+        if (distance > threshold) return null;
+      }
+    }
+    return distance;
+  }
+
+  /// Whether two hashes are within the similarity threshold.
+  static bool isSimilar(
+    String hash1,
+    String hash2, {
+    int threshold = similarityThreshold,
+  }) {
+    return distanceWithin(hash1, hash2, threshold: threshold) != null;
+  }
+
   /// Groups photos into duplicate/similar groups based on perceptual hashing.
+  ///
+  /// Instead of comparing every pair, hashes are split into
+  /// `similarityThreshold + 1` chunks. By the pigeonhole principle, two hashes
+  /// within the threshold must share at least one identical chunk, so only
+  /// photos in those buckets need a full distance check. This keeps large
+  /// galleries fast without changing which photos are grouped.
   static List<DuplicateGroup> groupDuplicates(List<PhotoModel> photos) {
+    final expectedLength = hashSize * hashSize;
+
     // Collect hashes computed during the gallery scan. Photos are decoded once.
     final photoHashes = <String, String>{};
     for (final photo in photos) {
-      if (photo.perceptualHash.isNotEmpty) {
-        photoHashes[photo.id] = photo.perceptualHash;
+      final hash = photo.perceptualHash;
+      if (hash.length == expectedLength) {
+        photoHashes[photo.id] = hash;
+      }
+    }
+
+    final photoList = photos
+        .where((p) => photoHashes.containsKey(p.id))
+        .toList(growable: false);
+    if (photoList.length < 2) return [];
+
+    final chunkCount = similarityThreshold + 1;
+    final chunkRanges = <List<int>>[];
+    final baseLength = expectedLength ~/ chunkCount;
+    final remainder = expectedLength % chunkCount;
+    var cursor = 0;
+    for (var chunk = 0; chunk < chunkCount; chunk++) {
+      final length = baseLength + (chunk < remainder ? 1 : 0);
+      chunkRanges.add([cursor, cursor + length]);
+      cursor += length;
+    }
+
+    // Map each chunk value to the indices of photos that contain it.
+    final buckets = <String, List<int>>{};
+    for (var i = 0; i < photoList.length; i++) {
+      final hash = photoHashes[photoList[i].id]!;
+      for (final range in chunkRanges) {
+        final key = '${range[0]}:${hash.substring(range[0], range[1])}';
+        buckets.putIfAbsent(key, () => <int>[]).add(i);
       }
     }
 
     final groups = <DuplicateGroup>[];
     final assigned = <String>{};
-
-    final photoList = photos
-        .where((p) => photoHashes.containsKey(p.id))
-        .toList();
 
     for (int i = 0; i < photoList.length; i++) {
       final photoA = photoList[i];
@@ -98,18 +158,29 @@ class DuplicateDetector {
       final hashA = photoHashes[photoA.id]!;
       var distanceSum = 0;
 
-      for (int j = i + 1; j < photoList.length; j++) {
-        final photoB = photoList[j];
-        if (assigned.contains(photoB.id)) continue;
-
-        final hashB = photoHashes[photoB.id]!;
-        final distance = hammingDistance(hashA, hashB);
-
-        if (distance <= similarityThreshold) {
-          groupPhotos.add(photoB);
-          assigned.add(photoB.id);
-          distanceSum += distance;
+      // Union of all buckets shared with this hash, in gallery order.
+      final candidateIndices = <int>{};
+      for (final range in chunkRanges) {
+        final key = '${range[0]}:${hashA.substring(range[0], range[1])}';
+        final matches = buckets[key];
+        if (matches == null) continue;
+        for (final index in matches) {
+          if (index > i && !assigned.contains(photoList[index].id)) {
+            candidateIndices.add(index);
+          }
         }
+      }
+      final orderedCandidates = candidateIndices.toList()..sort();
+
+      for (final j in orderedCandidates) {
+        final photoB = photoList[j];
+        final hashB = photoHashes[photoB.id]!;
+        final distance = distanceWithin(hashA, hashB);
+        if (distance == null) continue;
+
+        groupPhotos.add(photoB);
+        assigned.add(photoB.id);
+        distanceSum += distance;
       }
 
       if (groupPhotos.length > 1) {
@@ -119,13 +190,17 @@ class DuplicateDetector {
             groupId: photoA.id,
             photos: groupPhotos,
             isExactDuplicate: distanceSum == 0,
-            similarityScore: (1.0 - averageDistance / (hashSize * hashSize))
-                .clamp(0.0, 1.0),
+            similarityScore: (1.0 - averageDistance / expectedLength).clamp(
+              0.0,
+              1.0,
+            ),
           ),
         );
       }
     }
 
+    // Show the groups that can free the most space first.
+    groups.sort((a, b) => b.savableSize.compareTo(a.savableSize));
     return groups;
   }
 
@@ -144,4 +219,10 @@ class DuplicateDetector {
       return null;
     }
   }
+}
+
+/// Top-level entry point for running duplicate grouping in a background
+/// isolate via `compute`.
+List<DuplicateGroup> groupPhotosInIsolate(List<PhotoModel> photos) {
+  return DuplicateDetector.groupDuplicates(photos);
 }

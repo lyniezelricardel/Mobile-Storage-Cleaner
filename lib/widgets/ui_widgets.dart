@@ -24,9 +24,10 @@ class StorageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -35,7 +36,7 @@ class StorageCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(icon, color: color, size: 22),
@@ -46,7 +47,7 @@ class StorageCard extends StatelessWidget {
                     alignment: Alignment.centerRight,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
+                        horizontal: 8,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
@@ -57,10 +58,10 @@ class StorageCard extends StatelessWidget {
                         subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
+                          color: colors.textSecondary,
                         ),
                       ),
                     ),
@@ -71,19 +72,25 @@ class StorageCard extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF64748B),
+                color: colors.textSecondary,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
+            const SizedBox(height: 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                  color: colors.textPrimary,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -92,7 +99,7 @@ class StorageCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: progress,
-                  backgroundColor: const Color(0xFFE2E8F0),
+                  backgroundColor: colors.cardAlt,
                   color: color,
                   minHeight: 6,
                 ),
@@ -121,41 +128,43 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: color, size: 22),
-                ),
-                const Spacer(),
-              ],
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 22),
             ),
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF64748B),
+                color: colors.textSecondary,
               ),
             ),
             const SizedBox(height: 6),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: color,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.4,
+                  color: color,
+                ),
               ),
             ),
           ],
@@ -172,6 +181,7 @@ class FeatureButton extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final String? badge;
 
   const FeatureButton({
     super.key,
@@ -180,50 +190,75 @@ class FeatureButton extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.onTap,
+    this.badge,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Card(
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.04),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(18),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.featureGradient(color),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: color.withValues(alpha: 0.2)),
-                ),
-                child: Icon(icon, color: color, size: 30),
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.featureGradient(color),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: color.withValues(alpha: 0.2)),
+                    ),
+                    child: Icon(icon, color: color, size: 26),
+                  ),
+                  const Spacer(),
+                  if (badge != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        badge!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 17,
+                style: TextStyle(
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF0F172A),
+                  color: colors.textPrimary,
                 ),
-                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  fontSize: 13,
+                style: TextStyle(
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF64748B),
+                  height: 1.35,
+                  color: colors.textSecondary,
                 ),
-                textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -241,6 +276,7 @@ class PhotoGridItem extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onEnhance;
   final bool showBlurScore;
 
   const PhotoGridItem({
@@ -249,20 +285,24 @@ class PhotoGridItem extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     this.onDelete,
+    this.onEnhance,
     this.showBlurScore = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Stack(
       children: [
         GestureDetector(
           onTap: onTap,
           child: Card(
-            elevation: 1,
-            shadowColor: Colors.black.withValues(alpha: 0.05),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: isSelected ? colors.brand : colors.border,
+                width: isSelected ? 2 : 1,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,28 +310,22 @@ class PhotoGridItem extends StatelessWidget {
                 Expanded(
                   child: ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
+                      top: Radius.circular(15),
                     ),
                     child: Image.file(
-                      File(photo.path),
+                      File(photo.thumbnailPath ?? photo.path),
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,
+                      cacheWidth: 500,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           width: double.infinity,
                           height: double.infinity,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFFE2E8F0).withValues(alpha: 0.6),
-                                const Color(0xFFF1F5F9).withValues(alpha: 0.6),
-                              ],
-                            ),
-                          ),
+                          color: colors.cardAlt,
                           child: Icon(
                             Icons.image_not_supported_rounded,
-                            color: const Color(0xFF94A3B8),
+                            color: colors.textMuted,
                             size: 36,
                           ),
                         );
@@ -305,22 +339,22 @@ class PhotoGridItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        photo.path.split('/').last,
-                        style: const TextStyle(
+                        _fileName(photo.path),
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF0F172A),
+                          color: colors.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
                         photo.sizeString,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w400,
-                          color: Color(0xFF64748B),
+                          color: colors.textSecondary,
                         ),
                       ),
                       if (showBlurScore)
@@ -328,18 +362,18 @@ class PhotoGridItem extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 4),
                           child: Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.warning_amber_rounded,
                                 size: 14,
-                                color: Color(0xFFF59E0B),
+                                color: colors.amber,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                'Blur score: ${photo.blurScore.toStringAsFixed(0)}',
-                                style: const TextStyle(
+                                'Blur ${photo.blurScore.toStringAsFixed(0)}',
+                                style: TextStyle(
                                   fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFFF59E0B),
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.amber,
                                 ),
                               ),
                             ],
@@ -352,68 +386,97 @@ class PhotoGridItem extends StatelessWidget {
             ),
           ),
         ),
-        // Selection checkbox overlay
         Positioned(
           top: 8,
           right: 8,
           child: Container(
-            width: 26,
-            height: 26,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF6366F1) : Colors.white,
+              color: isSelected
+                  ? colors.brand
+                  : Colors.black.withValues(alpha: 0.35),
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected
-                    ? const Color(0xFF6366F1)
-                    : const Color(0xFF94A3B8),
+                color: isSelected ? colors.brand : Colors.white,
                 width: 2,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: isSelected
-                ? const Icon(Icons.check_circle, color: Colors.white, size: 18)
+                ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
                 : null,
           ),
         ),
-        // Delete button overlay (for individual delete)
-        if (onDelete != null)
+        if (onEnhance != null || onDelete != null)
           Positioned(
             bottom: 8,
             right: 8,
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (onEnhance != null) ...[
+                  _GridAction(
+                    icon: Icons.auto_fix_high_rounded,
+                    color: colors.brand,
+                    tooltip: 'Smart Enhance',
+                    onPressed: onEnhance!,
                   ),
+                  if (onDelete != null) const SizedBox(width: 6),
                 ],
-              ),
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                icon: const Icon(
-                  Icons.delete_outline,
-                  color: Color(0xFFEF4444),
-                  size: 18,
-                ),
-                onPressed: onDelete,
-                iconSize: 18,
-                constraints: const BoxConstraints(),
-              ),
+                if (onDelete != null)
+                  _GridAction(
+                    icon: Icons.delete_outline_rounded,
+                    color: colors.red,
+                    tooltip: 'Move to trash',
+                    onPressed: onDelete!,
+                  ),
+              ],
             ),
           ),
       ],
+    );
+  }
+
+  String _fileName(String path) {
+    final parts = path.split(RegExp(r'[/\\]'));
+    return parts.isEmpty || parts.last.isEmpty ? 'Photo' : parts.last;
+  }
+}
+
+class _GridAction extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  const _GridAction({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: colors.card.withValues(alpha: 0.92),
+          shape: BoxShape.circle,
+          border: Border.all(color: colors.border),
+        ),
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          icon: Icon(icon, color: color, size: 17),
+          onPressed: onPressed,
+          iconSize: 17,
+          constraints: const BoxConstraints(),
+        ),
+      ),
     );
   }
 }
@@ -423,71 +486,105 @@ class ScanProgress extends StatelessWidget {
   final String status;
   final int progress;
   final int total;
+  final String? detail;
+  final String? hint;
+  final VoidCallback? onCancel;
 
   const ScanProgress({
     super.key,
     required this.status,
     required this.progress,
     required this.total,
+    this.detail,
+    this.hint,
+    this.onCancel,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final percentage = total > 0 ? (progress / total).clamp(0.0, 1.0) : 0.0;
 
-    return Column(
-      children: [
-        Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6366F1).withValues(alpha: 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 76,
+            height: 76,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [colors.brand, colors.pink],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: colors.brand.withValues(alpha: 0.35),
+                  blurRadius: 22,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Icon(
+              total > 0 ? Icons.auto_awesome_rounded : Icons.search_rounded,
+              color: Colors.white,
+              size: 34,
+            ),
           ),
-          child: const Icon(
-            Icons.search_rounded,
-            color: Colors.white,
-            size: 32,
+          const SizedBox(height: 20),
+          Text(
+            status,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          status,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF0F172A),
+          const SizedBox(height: 8),
+          Text(
+            detail ??
+                (total > 0
+                    ? '$progress of $total photos'
+                    : 'This only takes a moment'),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              color: colors.textSecondary,
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          '$progress of $total photos',
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF64748B),
+          const SizedBox(height: 18),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: total > 0 ? percentage : null,
+              backgroundColor: colors.cardAlt,
+              color: colors.brand,
+              minHeight: 8,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            value: percentage,
-            backgroundColor: const Color(0xFFE2E8F0),
-            color: const Color(0xFF6366F1),
-            minHeight: 8,
-          ),
-        ),
-      ],
+          if (hint != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              hint!,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: colors.textMuted),
+            ),
+          ],
+          if (onCancel != null) ...[
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: onCancel,
+              icon: const Icon(Icons.stop_circle_outlined, size: 18),
+              label: const Text('Stop scan'),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -500,19 +597,31 @@ class ConfirmationDialog extends StatelessWidget {
   final int bytesFreed;
   final VoidCallback onConfirm;
   final VoidCallback onCancel;
+  final String? detail;
+  final String? note;
+  final String confirmLabel;
+  final IconData icon;
+  final Color? accent;
 
   const ConfirmationDialog({
     super.key,
     required this.title,
     required this.content,
     required this.photoCount,
-    required this.bytesFreed,
+    this.bytesFreed = 0,
     required this.onConfirm,
     required this.onCancel,
+    this.detail,
+    this.note,
+    this.confirmLabel = 'Delete',
+    this.icon = Icons.delete_outline_rounded,
+    this.accent,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final accentColor = accent ?? colors.red;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
@@ -524,84 +633,73 @@ class ConfirmationDialog extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: const Color(0xFFFEF2F2),
+                color: accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: const Icon(
-                Icons.delete_outline_rounded,
-                color: Color(0xFFEF4444),
-                size: 30,
-              ),
+              child: Icon(icon, color: accentColor, size: 30),
             ),
             const SizedBox(height: 20),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
+                color: colors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               content,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFF64748B),
+                height: 1.45,
+                color: colors.textSecondary,
               ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: colors.cardAlt,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$photoCount ${photoCount == 1 ? 'photo' : 'photos'}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    detail ?? 'About ${_formatBytes(bytesFreed)} will be freed',
+                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              note ??
+                  'Android will ask you to confirm before anything is removed.',
+              style: TextStyle(fontSize: 11.5, color: colors.textMuted),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$photoCount photos',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Approx. ${_formatBytes(bytesFreed)} will be freed',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF64748B),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
                     child: const Text('Cancel'),
                   ),
                 ),
@@ -610,14 +708,10 @@ class ConfirmationDialog extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onConfirm,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF4444),
+                      backgroundColor: accentColor,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text('Delete Photos'),
+                    child: Text(confirmLabel),
                   ),
                 ),
               ],
@@ -629,13 +723,95 @@ class ConfirmationDialog extends StatelessWidget {
   }
 
   String _formatBytes(int bytes) {
-    if (bytes >= 1048576) {
+    if (bytes >= 1073741824) {
+      return '${(bytes / 1073741824).toStringAsFixed(1)} GB';
+    } else if (bytes >= 1048576) {
       return '${(bytes / 1048576).toStringAsFixed(1)} MB';
     } else if (bytes >= 1024) {
       return '${(bytes / 1024).toStringAsFixed(1)} KB';
     } else {
       return '$bytes B';
     }
+  }
+}
+
+/// Compact progress banner shown while an incremental scan updates the cache.
+class ScanBanner extends StatelessWidget {
+  final String status;
+  final int progress;
+  final int total;
+  final VoidCallback? onCancel;
+
+  const ScanBanner({
+    super.key,
+    required this.status,
+    required this.progress,
+    required this.total,
+    this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final percent = total > 0 ? (progress / total).clamp(0.0, 1.0) : null;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      decoration: BoxDecoration(
+        color: colors.brand.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.brand.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: colors.brand,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ),
+              if (onCancel != null)
+                TextButton(
+                  onPressed: onCancel,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('Stop', style: TextStyle(fontSize: 12)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: percent,
+              minHeight: 5,
+              backgroundColor: colors.cardAlt,
+              color: colors.brand,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -658,57 +834,50 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 100,
-              height: 100,
+              width: 96,
+              height: 96,
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                gradient: AppTheme.featureGradient(colors.brand),
                 borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: colors.border),
               ),
-              child: Icon(icon, size: 44, color: const Color(0xFF94A3B8)),
+              child: Icon(icon, size: 42, color: colors.brand),
             ),
             const SizedBox(height: 24),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 20,
+              style: TextStyle(
+                fontSize: 19,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
+                color: colors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               subtitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFF64748B),
+                height: 1.5,
+                color: colors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             if (onAction != null && actionLabel != null) ...[
               const SizedBox(height: 24),
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: onAction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 24,
-                  ),
-                ),
-                child: Text(actionLabel!),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: Text(actionLabel!),
               ),
             ],
           ],

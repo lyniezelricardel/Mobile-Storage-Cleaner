@@ -24,6 +24,8 @@ android {
         applicationId = "com.photocleaner.mobile_storage_cleaner"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // flutter_secure_storage's Android Keystore implementation requires
+        // API 23 (Android 6.0). The app targets modern Android only.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

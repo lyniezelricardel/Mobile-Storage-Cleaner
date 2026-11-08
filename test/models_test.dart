@@ -5,17 +5,19 @@ import 'package:mobile_storage_cleaner/services/duplicate_detector.dart';
 PhotoModel _photo({
   required String id,
   int fileSize = 0,
+  double blurScore = 500,
   bool isSelected = false,
+  DateTime? dateTaken,
   String perceptualHash = '',
 }) {
   return PhotoModel(
     id: id,
     path: '/photos/$id.jpg',
     fileSize: fileSize,
-    blurScore: 500,
+    blurScore: blurScore,
     isBlurry: false,
     isSelected: isSelected,
-    dateTaken: DateTime(2026, 1, 1),
+    dateTaken: dateTaken ?? DateTime(2026, 1, 1),
     mimeType: 'image/jpeg',
     perceptualHash: perceptualHash,
   );
@@ -97,6 +99,234 @@ void main() {
 
       expect(info.usedPercent, 0);
       expect(info.freePercent, 0);
+    });
+  });
+
+  group('TrashedPhoto', () {
+    test('exposes file name, size and expiry labels', () {
+      final now = DateTime.now();
+      final photo = TrashedPhoto(
+        id: 'trash-1',
+        path: r'C:\photos\holiday.jpg',
+        fileSize: 2 * 1024 * 1024,
+        dateTaken: DateTime(2026, 1, 1),
+        mimeType: 'image/jpeg',
+        trashedAt: now,
+        expiresAt: now.add(const Duration(days: 5, hours: 1)),
+      );
+
+      expect(photo.fileName, 'holiday.jpg');
+      expect(photo.sizeString, '2.0 MB');
+      expect(photo.daysLeft, 5);
+      expect(photo.expiryLabel, 'Expires in 5 days');
+    });
+
+    test('uses a singular label for the final day', () {
+      final now = DateTime.now();
+      final photo = TrashedPhoto(
+        id: 'trash-2',
+        path: '/photos/one.png',
+        fileSize: 512,
+        dateTaken: DateTime(2026, 1, 1),
+        mimeType: 'image/png',
+        trashedAt: now,
+        expiresAt: now.add(const Duration(days: 1, hours: 1)),
+      );
+
+      expect(photo.daysLeft, 1);
+      expect(photo.expiryLabel, 'Expires in 1 day');
+    });
+
+    test('reports an empty file name fallback', () {
+      final now = DateTime.now();
+      final photo = TrashedPhoto(
+        id: 'trash-3',
+        path: '',
+        fileSize: 0,
+        dateTaken: now,
+        mimeType: 'image/jpeg',
+        trashedAt: now,
+        expiresAt: now.add(const Duration(days: 2)),
+      );
+
+      expect(photo.fileName, 'Photo');
+      expect(photo.sizeString, '0 B');
+    });
+  });
+
+  group('TrashResult, RestoreResult and PermanentDeleteResult', () {
+    test('trashedBytes sums the photos that moved', () {
+      final now = DateTime.now();
+      final result = TrashResult(
+        requestedCount: 3,
+        trashedCount: 2,
+        trashedPhotos: [
+          TrashedPhoto(
+            id: 'a',
+            path: '/photos/a.jpg',
+            fileSize: 100,
+            dateTaken: now,
+            mimeType: 'image/jpeg',
+            trashedAt: now,
+            expiresAt: now.add(const Duration(days: 30)),
+          ),
+          TrashedPhoto(
+            id: 'b',
+            path: '/photos/b.jpg',
+            fileSize: 250,
+            dateTaken: now,
+            mimeType: 'image/jpeg',
+            trashedAt: now,
+            expiresAt: now.add(const Duration(days: 30)),
+          ),
+        ],
+      );
+
+      expect(result.trashedBytes, 350);
+      expect(result.success, isTrue);
+      expect(result.partial, isTrue);
+    });
+
+    test('restore result tracks cancel, failure and partial states', () {
+      expect(const RestoreResult().success, isFalse);
+      expect(const RestoreResult(canceled: true).success, isFalse);
+      expect(
+        const RestoreResult(requestedCount: 2, restoredCount: 1).partial,
+        isTrue,
+      );
+      expect(
+        const RestoreResult(requestedCount: 1, restoredCount: 1).success,
+        isTrue,
+      );
+    });
+
+    test('permanent delete result sums bytes and tracks outcomes', () {
+      final now = DateTime.now();
+      final photos = [
+        TrashedPhoto(
+          id: 'a',
+          path: '/photos/a.jpg',
+          fileSize: 100,
+          dateTaken: now,
+          mimeType: 'image/jpeg',
+          trashedAt: now,
+          expiresAt: now.add(const Duration(days: 30)),
+        ),
+        TrashedPhoto(
+          id: 'b',
+          path: '/photos/b.jpg',
+          fileSize: 250,
+          dateTaken: now,
+          mimeType: 'image/jpeg',
+          trashedAt: now,
+          expiresAt: now.add(const Duration(days: 30)),
+        ),
+      ];
+      final result = PermanentDeleteResult(
+        requestedCount: 3,
+        deletedPhotos: photos,
+      );
+
+      expect(result.deletedCount, 2);
+      expect(result.deletedBytes, 350);
+      expect(result.success, isTrue);
+      expect(result.partial, isTrue);
+      expect(const PermanentDeleteResult(canceled: true).success, isFalse);
+    });
+  });
+
+  group('DuplicateGroup', () {
+    test('bestPhoto is the largest file regardless of list position', () {
+      final group = DuplicateGroup(
+        groupId: 'g1',
+        photos: [
+          _photo(id: 'small', fileSize: 100),
+          _photo(id: 'best', fileSize: 900),
+          _photo(id: 'medium', fileSize: 400),
+        ],
+      );
+
+      expect(group.bestPhoto.id, 'best');
+      expect(group.photosBestFirst.map((photo) => photo.id), [
+        'best',
+        'small',
+        'medium',
+      ]);
+    });
+
+    test('bestPhoto breaks size ties by sharpness, then date', () {
+      final sharper = DuplicateGroup(
+        groupId: 'g2',
+        photos: [
+          _photo(id: 'soft', fileSize: 500, blurScore: 120),
+          _photo(id: 'sharp', fileSize: 500, blurScore: 800),
+        ],
+      );
+      expect(sharper.bestPhoto.id, 'sharp');
+
+      final newer = DuplicateGroup(
+        groupId: 'g3',
+        photos: [
+          _photo(
+            id: 'old',
+            fileSize: 500,
+            blurScore: 800,
+            dateTaken: DateTime(2025, 1, 1),
+          ),
+          _photo(
+            id: 'new',
+            fileSize: 500,
+            blurScore: 800,
+            dateTaken: DateTime(2026, 1, 1),
+          ),
+        ],
+      );
+      expect(newer.bestPhoto.id, 'new');
+    });
+
+    test('savableSize counts every copy except the best', () {
+      final group = DuplicateGroup(
+        groupId: 'g4',
+        photos: [
+          _photo(id: 'best', fileSize: 900),
+          _photo(id: 'copy-a', fileSize: 100),
+          _photo(id: 'copy-b', fileSize: 200),
+        ],
+      );
+
+      expect(group.savableSize, 300);
+      expect(
+        DuplicateGroup(
+          groupId: 'g5',
+          photos: [_photo(id: 'only')],
+        ).savableSize,
+        0,
+      );
+    });
+
+    test('keep-best selects every copy except the best', () {
+      final group = DuplicateGroup(
+        groupId: 'g6',
+        photos: [
+          _photo(id: 'small', fileSize: 100),
+          _photo(id: 'best', fileSize: 900),
+          _photo(id: 'medium', fileSize: 400),
+        ],
+      );
+
+      final updated = group.photosAllButBestSelected;
+      final selectedIds = updated
+          .where((photo) => photo.isSelected)
+          .map((photo) => photo.id)
+          .toList();
+
+      expect(selectedIds, ['small', 'medium']);
+      expect(
+        updated.firstWhere((photo) => photo.id == 'best').isSelected,
+        isFalse,
+      );
+      // The original group is untouched; the provider swaps in the copy.
+      expect(group.photos.every((photo) => !photo.isSelected), isTrue);
     });
   });
 
